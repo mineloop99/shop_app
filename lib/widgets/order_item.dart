@@ -22,7 +22,7 @@ class _OrderItemState extends State<OrderItem> {
       child: Column(
         children: [
           ListTile(
-            title: Text('\$${widget.order.amount}'),
+            title: Text('Total: \$${widget.order.amount}'),
             subtitle: Text(
               DateFormat('dd/MM/yyyy').format(widget.order.dateTime),
             ),
@@ -39,7 +39,7 @@ class _OrderItemState extends State<OrderItem> {
           ),
           if (_expanded)
             Container(
-              height: min(widget.order.products.length * 20.0 + 10, 180),
+              height: min(widget.order.products.length * 20.0 + 31, 180),
               child: Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 15,
@@ -48,23 +48,28 @@ class _OrderItemState extends State<OrderItem> {
                 child: ListView(
                   children: widget.order.products
                       .map(
-                        (e) => Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        (e) => Column(
                           children: [
-                            Text(
-                              e.title,
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  e.title,
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Text(
+                                  'Total: ${e.quantity}x \$${e.price}',
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ],
                             ),
-                            Text(
-                              '${e.quantity}x \$${e.price}',
-                              style: TextStyle(
-                                fontSize: 15,
-                                color: Colors.grey,
-                              ),
-                            ),
+                            Divider(),
                           ],
                         ),
                       )
