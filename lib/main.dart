@@ -10,6 +10,10 @@ import './providers/cart.dart';
 import './providers/orders.dart';
 import './screens/orders_screen.dart';
 import './screens/product_editor_screen.dart';
+import './screens/auth_screen.dart';
+import './providers/auth.dart';
+import './screens/about_screen.dart';
+import './screens/splash_screen.dart';
 
 void main() => runApp(MyApp());
 
@@ -19,31 +23,24 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(
-          create: (_) => ProductsProvider(),
+          create: (_) => Auth(),
         ),
+        ChangeNotifierProxyProvider<Auth, ProductsProvider>(
+            create: (_) => ProductsProvider('', '', []),
+            update: (ctx, auth, previousProducts) {
+              return ProductsProvider(auth.token, auth.userId,
+                  previousProducts == null ? [] : previousProducts.items);
+            }),
         ChangeNotifierProvider(
           create: (_) => Cart(),
         ),
-        ChangeNotifierProvider(
-          create: (_) => Orders(),
+        ChangeNotifierProxyProvider<Auth, Orders>(
+          create: (_) => Orders('', '', []),
+          update: (ctx, auth, previousOrders) => Orders(auth.token, auth.userId,
+              previousOrders == null ? [] : previousOrders.orders),
         ),
       ],
-      child: MaterialApp(
-        title: 'Shop App',
-        theme: ThemeData(
-          accentColor: Colors.deepOrange,
-          primarySwatch: Colors.blue,
-          fontFamily: 'Lato',
-        ),
-        home: ProductsOverviewScreen(),
-        routes: {
-          ProductDetailScreen.routeName: (context) => ProductDetailScreen(),
-          CartScreen.routName: (context) => CartScreen(),
-          OrdersScreen.routeName: (context) => OrdersScreen(),
-          UserProductsScreen.routeName: (context) => UserProductsScreen(),
-          ProductEditorScreen.routeName: (context) => ProductEditorScreen(),
-        },
-      ),
+      child: MyHomePage(),
     );
   }
 }
@@ -53,12 +50,31 @@ class MyHomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('My shop'),
-      ),
-      body: Center(
-        child: Text('Hello World'),
+    return Consumer<Auth>(
+      builder: (context, auth, _) => MaterialApp(
+        title: 'Shop App',
+        theme: ThemeData(
+          accentColor: Colors.deepOrange,
+          primarySwatch: Colors.purple,
+          fontFamily: 'Lato',
+        ),
+        home: auth.isAuth
+            ? ProductsOverviewScreen()
+            : FutureBuilder(
+                future: auth.tryAutoLogin(),
+                builder: (ctx, authResultSnapshot) =>
+                    authResultSnapshot.connectionState ==
+                            ConnectionState.waiting
+                        ? SplashScreen()
+                        : AuthScreen()),
+        routes: {
+          ProductDetailScreen.routeName: (context) => ProductDetailScreen(),
+          CartScreen.routName: (context) => CartScreen(),
+          OrdersScreen.routeName: (context) => OrdersScreen(),
+          UserProductsScreen.routeName: (context) => UserProductsScreen(),
+          ProductEditorScreen.routeName: (context) => ProductEditorScreen(),
+          AboutScreen.routeName: (context) => AboutScreen(),
+        },
       ),
     );
   }
